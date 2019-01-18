@@ -874,7 +874,7 @@ copy_frame_to_codec_frame (GstOpenHEVCVidDec * openhevcdec, OHFrame * frame, Gst
     }
 
     for (l = 0; l < GST_VIDEO_FRAME_COMP_HEIGHT (&dst_frame, p); l++) {
-      memcpy (&dst[dst_pos], &src[src_pos], GST_VIDEO_FRAME_COMP_WIDTH (&dst_frame, p));
+      memcpy (&dst[dst_pos], &src[src_pos], GST_VIDEO_FRAME_COMP_STRIDE (&dst_frame, p));
       src_pos += src_stride;
       dst_pos += dst_stride;
     }
