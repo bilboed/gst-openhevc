@@ -89,7 +89,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw,format=(string)I420"));
+    GST_STATIC_CAPS ("video/x-raw,format={ (string)I420, (string)I420_10LE }"));
 
 static void
 gst_openhevcviddec_class_init (GstOpenHEVCVidDecClass * klass)
@@ -570,19 +570,26 @@ no_par:
 }
 
 static GstVideoFormat
-video_format_from_chromat_format (int chroma_format)
+video_format_from_chromat_format (int chroma_format, int bitdepth)
 {
   switch (chroma_format) {
     case OH_YUV420:
-      return GST_VIDEO_FORMAT_I420;
+      if (bitdepth == 8)
+        return GST_VIDEO_FORMAT_I420;
+      else if (bitdepth == 10)
+        return GST_VIDEO_FORMAT_I420_10LE;
     case OH_YUV422:
       /* FIXME: untested */
-      return GST_VIDEO_FORMAT_Y42B;
+      if (bitdepth == 8)
+        return GST_VIDEO_FORMAT_Y42B;
     case OH_YUV444:
       /* FIXME: untested */
-      return GST_VIDEO_FORMAT_Y444;
+      if (bitdepth == 8)
+        return GST_VIDEO_FORMAT_Y444;
+      else if (bitdepth == 10)
+        return GST_VIDEO_FORMAT_Y444_10LE;
     default:
-      GST_WARNING ("Unknown chroma format %u", chroma_format);
+      GST_WARNING ("Unknown chroma format / bitdepth combination %u %d", chroma_format, bitdepth);
       return GST_VIDEO_FORMAT_UNKNOWN;
   }
 }
@@ -604,7 +611,7 @@ gst_openhevcviddec_negotiate (GstOpenHEVCVidDec * openhevcdec)
   if (!_update_frame_info (openhevcdec, &new))
     return TRUE;
 
-  fmt = video_format_from_chromat_format (openhevcdec->frame_info.chromat_format);
+  fmt = video_format_from_chromat_format (openhevcdec->frame_info.chromat_format, openhevcdec->frame_info.bitdepth);
 
   output_state =
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (openhevcdec), fmt,
@@ -835,7 +842,7 @@ copy_frame_to_codec_frame (GstOpenHEVCVidDec * openhevcdec, OHFrame * frame, Gst
     goto error;
 
   if (!gst_video_info_set_format (&dst_info,
-      video_format_from_chromat_format (frame->frame_par.chromat_format),
+      video_format_from_chromat_format (frame->frame_par.chromat_format, frame->frame_par.bitdepth),
       frame->frame_par.width, frame->frame_par.height)) {
     GST_ERROR_OBJECT (openhevcdec, "Could not set destination video info");
     goto error;
