@@ -1159,6 +1159,9 @@ gst_openhevcviddec_handle_frame (GstVideoDecoder * decoder,
   if (got_decode < 0)
     goto decode_error;
 
+  if (!((1 << openhevcdec->quality_layer_id) & got_decode))
+    goto done;
+
   do {
     /* decode a frame of audio/video now */
     got_picture = gst_openhevcviddec_frame (openhevcdec, frame, got_decode, &ret);
