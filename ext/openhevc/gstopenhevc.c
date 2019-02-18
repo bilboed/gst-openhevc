@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 
 #include "gstopenhevc.h"
+#include "gstopenhevcviddec.h"
 
 #define LICENSE "LGPL"
 
