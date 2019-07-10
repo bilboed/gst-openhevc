@@ -61,8 +61,8 @@ static gboolean gst_openhevcviddec_stop (GstVideoDecoder * decoder);
 static gboolean gst_openhevcviddec_flush (GstVideoDecoder * decoder);
 static gboolean gst_openhevcviddec_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query);
-static gboolean gst_openhevcviddec_propose_allocation (GstVideoDecoder * decoder,
-    GstQuery * query);
+static gboolean gst_openhevcviddec_propose_allocation (GstVideoDecoder *
+    decoder, GstQuery * query);
 
 static void gst_openhevcviddec_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -122,16 +122,16 @@ gst_openhevcviddec_class_init (GstOpenHEVCVidDecClass * klass)
           0, G_MAXINT, DEFAULT_MAX_THREADS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_QUALITY_LAYER_ID,
-      g_param_spec_int ("quality-layer-id", "Quality Layer ID",
-          "The HEVC quality layer to decode",
-          0, G_MAXINT, DEFAULT_QUALITY_LAYER_ID,
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_QUALITY_LAYER_ID, g_param_spec_int ("quality-layer-id",
+          "Quality Layer ID", "The HEVC quality layer to decode", 0, G_MAXINT,
+          DEFAULT_QUALITY_LAYER_ID,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TEMPORAL_LAYER_ID,
-      g_param_spec_int ("temporal-layer-id", "Quality Layer ID",
-          "The HEVC temporal layer to decode",
-          0, G_MAXINT, DEFAULT_TEMPORAL_LAYER_ID,
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_TEMPORAL_LAYER_ID, g_param_spec_int ("temporal-layer-id",
+          "Quality Layer ID", "The HEVC temporal layer to decode", 0, G_MAXINT,
+          DEFAULT_TEMPORAL_LAYER_ID,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_metadata (element_class, "OpenHEVC decoder",
@@ -217,12 +217,15 @@ gst_openhevc_open_handle (GstOpenHEVCVidDec * openhevcdec)
   /* FIXME: set threads and thread type */
   openhevcdec->hevc_handle = oh_init (1, 1);
 #ifndef GST_DISABLE_GST_DEBUG
-  oh_set_log_level(openhevcdec->hevc_handle, OHEVC_LOG_VERBOSE);
+  oh_set_log_level (openhevcdec->hevc_handle, OHEVC_LOG_VERBOSE);
   oh_set_log_callback (openhevcdec->hevc_handle, gst_openhevc_log_callback);
 #endif
-  oh_select_active_layer (openhevcdec->hevc_handle, openhevcdec->quality_layer_id);
-  oh_select_view_layer (openhevcdec->hevc_handle, openhevcdec->quality_layer_id);
-  oh_select_temporal_layer (openhevcdec->hevc_handle, openhevcdec->temporal_layer_id);
+  oh_select_active_layer (openhevcdec->hevc_handle,
+      openhevcdec->quality_layer_id);
+  oh_select_view_layer (openhevcdec->hevc_handle,
+      openhevcdec->quality_layer_id);
+  oh_select_temporal_layer (openhevcdec->hevc_handle,
+      openhevcdec->temporal_layer_id);
 }
 
 static void
@@ -262,7 +265,7 @@ gst_openhevcviddec_open (GstOpenHEVCVidDec * openhevcdec)
   if (!openhevcdec->hevc_handle)
     goto could_not_open;
 
-  oh_start(openhevcdec->hevc_handle);
+  oh_start (openhevcdec->hevc_handle);
   openhevcdec->opened = TRUE;
 
   GST_LOG_OBJECT (openhevcdec, "Opened OpenHEVC codec");
@@ -319,8 +322,9 @@ _update_frame_info (GstOpenHEVCVidDec * openhevcdec, OHFrameInfo * info)
 
   memcpy (&openhevcdec->frame_info, info, sizeof (*info));
 
-  GST_INFO_OBJECT (openhevcdec, "Updating video info to %ix%i depth %i chroma format %i",
-      info->width, info->height, info->bitdepth, info->chromat_format);
+  GST_INFO_OBJECT (openhevcdec,
+      "Updating video info to %ix%i depth %i chroma format %i", info->width,
+      info->height, info->bitdepth, info->chromat_format);
 
   return TRUE;
 }
@@ -397,12 +401,16 @@ gst_openhevcviddec_set_format (GstVideoDecoder * decoder,
       if (num > 0 && den > 0) {
         /* somehow these seem mixed up.. */
         /* they're fine, this is because it does period=1/frequency */
-        openhevcdec->frame_info.framerate.den = gst_value_get_fraction_numerator (fps);
-        openhevcdec->frame_info.framerate.num = gst_value_get_fraction_denominator (fps);
+        openhevcdec->frame_info.framerate.den =
+            gst_value_get_fraction_numerator (fps);
+        openhevcdec->frame_info.framerate.num =
+            gst_value_get_fraction_denominator (fps);
 
         GST_DEBUG ("setting framerate %d/%d = %lf",
-            openhevcdec->frame_info.framerate.den, openhevcdec->frame_info.framerate.num,
-            1. * openhevcdec->frame_info.framerate.den / openhevcdec->frame_info.framerate.num);
+            openhevcdec->frame_info.framerate.den,
+            openhevcdec->frame_info.framerate.num,
+            1. * openhevcdec->frame_info.framerate.den /
+            openhevcdec->frame_info.framerate.num);
       } else {
         GST_INFO ("ignoring framerate %d/%d (probably variable framerate)",
             num, den);
@@ -420,20 +428,23 @@ gst_openhevcviddec_set_format (GstVideoDecoder * decoder,
         openhevcdec->frame_info.sample_aspect_ratio.den = den;
 
         GST_DEBUG ("setting pixel-aspect-ratio %d/%d = %lf",
-            openhevcdec->frame_info.sample_aspect_ratio.num, openhevcdec->frame_info.sample_aspect_ratio.den,
+            openhevcdec->frame_info.sample_aspect_ratio.num,
+            openhevcdec->frame_info.sample_aspect_ratio.den,
             1. * openhevcdec->frame_info.sample_aspect_ratio.num /
             openhevcdec->frame_info.sample_aspect_ratio.den);
       } else {
         GST_WARNING ("ignoring insane pixel-aspect-ratio %d/%d",
-            openhevcdec->frame_info.sample_aspect_ratio.num, openhevcdec->frame_info.sample_aspect_ratio.den);
+            openhevcdec->frame_info.sample_aspect_ratio.num,
+            openhevcdec->frame_info.sample_aspect_ratio.den);
       }
     }
   }
 
-  GST_LOG_OBJECT (openhevcdec, "size after %dx%d", openhevcdec->frame_info.width,
-      openhevcdec->frame_info.height);
+  GST_LOG_OBJECT (openhevcdec, "size after %dx%d",
+      openhevcdec->frame_info.width, openhevcdec->frame_info.height);
 
-  if (!openhevcdec->frame_info.framerate.den || !openhevcdec->frame_info.framerate.num) {
+  if (!openhevcdec->frame_info.framerate.den
+      || !openhevcdec->frame_info.framerate.num) {
     GST_DEBUG_OBJECT (openhevcdec, "forcing 25/1 framerate");
     openhevcdec->frame_info.framerate.num = 1;
     openhevcdec->frame_info.framerate.den = 25;
@@ -474,8 +485,7 @@ gst_openhevcviddec_set_format (GstVideoDecoder * decoder,
     GstVideoInfo *info = &openhevcdec->input_state->info;
     /* defualt to adding a frame worth of latancy for possible b frames */
     latency = gst_util_uint64_scale_ceil (
-        (1) * GST_SECOND, info->fps_d,
-        info->fps_n);
+        (1) * GST_SECOND, info->fps_d, info->fps_n);
   }
 
   ret = TRUE;
@@ -513,7 +523,8 @@ gst_openhevcviddec_update_par (GstOpenHEVCVidDec * openhevcdec,
         demuxer_denom);
   }
 
-  if (openhevcdec->frame_info.sample_aspect_ratio.num && openhevcdec->frame_info.sample_aspect_ratio.den) {
+  if (openhevcdec->frame_info.sample_aspect_ratio.num
+      && openhevcdec->frame_info.sample_aspect_ratio.den) {
     decoder_num = openhevcdec->frame_info.sample_aspect_ratio.num;
     decoder_denom = openhevcdec->frame_info.sample_aspect_ratio.den;
     decoder_par_set = TRUE;
@@ -590,7 +601,8 @@ video_format_from_chromat_format (int chroma_format, int bitdepth)
       else if (bitdepth == 10)
         return GST_VIDEO_FORMAT_Y444_10LE;
     default:
-      GST_WARNING ("Unknown chroma format / bitdepth combination %u %d", chroma_format, bitdepth);
+      GST_WARNING ("Unknown chroma format / bitdepth combination %u %d",
+          chroma_format, bitdepth);
       return GST_VIDEO_FORMAT_UNKNOWN;
   }
 }
@@ -612,11 +624,14 @@ gst_openhevcviddec_negotiate (GstOpenHEVCVidDec * openhevcdec)
   if (!_update_frame_info (openhevcdec, &new))
     return TRUE;
 
-  fmt = video_format_from_chromat_format (openhevcdec->frame_info.chromat_format, openhevcdec->frame_info.bitdepth);
+  fmt =
+      video_format_from_chromat_format (openhevcdec->frame_info.chromat_format,
+      openhevcdec->frame_info.bitdepth);
 
   output_state =
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (openhevcdec), fmt,
-      openhevcdec->frame_info.width, openhevcdec->frame_info.height, openhevcdec->input_state);
+      openhevcdec->frame_info.width, openhevcdec->frame_info.height,
+      openhevcdec->input_state);
   if (openhevcdec->output_state)
     gst_video_codec_state_unref (openhevcdec->output_state);
   openhevcdec->output_state = output_state;
@@ -803,8 +818,7 @@ gst_openhevcviddec_negotiate (GstOpenHEVCVidDec * openhevcdec)
 
   /* The decoder is configured, we now know the true latency */
   if (fps_n) {
-    latency =
-        gst_util_uint64_scale_ceil (GST_SECOND, fps_d, fps_n);
+    latency = gst_util_uint64_scale_ceil (GST_SECOND, fps_d, fps_n);
     gst_video_decoder_set_latency (GST_VIDEO_DECODER (openhevcdec), latency,
         latency);
   }
@@ -819,7 +833,7 @@ unknown_format:
     return FALSE;
   }
 #endif
-  negotiate_failed:
+negotiate_failed:
   {
     /* Reset so we try again next time even if force==FALSE */
     _reset_frame_info (&openhevcdec->frame_info);
@@ -830,7 +844,8 @@ unknown_format:
 }
 
 static gboolean
-copy_frame_to_codec_frame (GstOpenHEVCVidDec * openhevcdec, OHFrame * frame, GstVideoCodecFrame * out_frame)
+copy_frame_to_codec_frame (GstOpenHEVCVidDec * openhevcdec, OHFrame * frame,
+    GstVideoCodecFrame * out_frame)
 {
   GstFlowReturn ret;
   GstVideoInfo dst_info;
@@ -838,18 +853,22 @@ copy_frame_to_codec_frame (GstOpenHEVCVidDec * openhevcdec, OHFrame * frame, Gst
   gboolean res = FALSE;
   gsize p;
 
-  ret = gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (openhevcdec), out_frame);
+  ret =
+      gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (openhevcdec),
+      out_frame);
   if (ret != GST_FLOW_OK)
     goto error;
 
   if (!gst_video_info_set_format (&dst_info,
-      video_format_from_chromat_format (frame->frame_par.chromat_format, frame->frame_par.bitdepth),
-      frame->frame_par.width, frame->frame_par.height)) {
+          video_format_from_chromat_format (frame->frame_par.chromat_format,
+              frame->frame_par.bitdepth), frame->frame_par.width,
+          frame->frame_par.height)) {
     GST_ERROR_OBJECT (openhevcdec, "Could not set destination video info");
     goto error;
   }
 
-  if (!gst_video_frame_map (&dst_frame, &dst_info, out_frame->output_buffer, GST_MAP_WRITE)) {
+  if (!gst_video_frame_map (&dst_frame, &dst_info, out_frame->output_buffer,
+          GST_MAP_WRITE)) {
     GST_ERROR_OBJECT (openhevcdec, "Failed to map destination video frame");
     goto error;
   }
@@ -857,9 +876,9 @@ copy_frame_to_codec_frame (GstOpenHEVCVidDec * openhevcdec, OHFrame * frame, Gst
   for (p = 0; p < GST_VIDEO_FRAME_N_PLANES (&dst_frame); p++) {
     /* plane 0 */
     gsize src_pos = 0, dst_pos = 0;
-    guint8 * dst = dst_frame.data[p];
+    guint8 *dst = dst_frame.data[p];
     gsize dst_stride = GST_VIDEO_FRAME_COMP_STRIDE (&dst_frame, p);
-    guint8 * src;
+    guint8 *src;
     gsize src_stride;
     gsize l;
 
@@ -875,7 +894,8 @@ copy_frame_to_codec_frame (GstOpenHEVCVidDec * openhevcdec, OHFrame * frame, Gst
     }
 
     for (l = 0; l < GST_VIDEO_FRAME_COMP_HEIGHT (&dst_frame, p); l++) {
-      memcpy (&dst[dst_pos], &src[src_pos], GST_VIDEO_FRAME_COMP_STRIDE (&dst_frame, p));
+      memcpy (&dst[dst_pos], &src[src_pos],
+          GST_VIDEO_FRAME_COMP_STRIDE (&dst_frame, p));
       src_pos += src_stride;
       dst_pos += dst_stride;
     }
@@ -908,7 +928,9 @@ gst_openhevcviddec_video_frame (GstOpenHEVCVidDec * openhevcdec,
 
   *ret = GST_FLOW_OK;
 
-  got_frame = oh_output_update (openhevcdec->hevc_handle, got_picture, &openhevcdec->frame);
+  got_frame =
+      oh_output_update (openhevcdec->hevc_handle, got_picture,
+      &openhevcdec->frame);
   if (got_frame == 0) {
     goto beach;
   } else if (got_frame < 0) {
@@ -921,13 +943,16 @@ gst_openhevcviddec_video_frame (GstOpenHEVCVidDec * openhevcdec,
     GList *l, *ol;
     GstVideoDecoder *dec = GST_VIDEO_DECODER (openhevcdec);
 
-    GST_TRACE_OBJECT (openhevcdec, "Attempting to find frame with pts: %" G_GUINT64_FORMAT, openhevcdec->frame.frame_par.pts);
+    GST_TRACE_OBJECT (openhevcdec,
+        "Attempting to find frame with pts: %" G_GUINT64_FORMAT,
+        openhevcdec->frame.frame_par.pts);
 
     ol = l = gst_video_decoder_get_frames (dec);
     while (l) {
       GstVideoCodecFrame *tmp = l->data;
 
-    GST_TRACE_OBJECT (openhevcdec, "checking existing frame with pts: %" G_GUINT64_FORMAT, tmp->pts);
+      GST_TRACE_OBJECT (openhevcdec,
+          "checking existing frame with pts: %" G_GUINT64_FORMAT, tmp->pts);
       if (openhevcdec->frame.frame_par.pts == tmp->pts) {
         out_frame = tmp;
       } else {
@@ -947,7 +972,8 @@ gst_openhevcviddec_video_frame (GstOpenHEVCVidDec * openhevcdec,
 #if 0
     GstVideoInfo *in_info = &openhevcdec->input_state->info;
     /* Take multiview mode from upstream if present */
-    openhevcdec->picture_multiview_mode = GST_VIDEO_INFO_MULTIVIEW_MODE (in_info);
+    openhevcdec->picture_multiview_mode =
+        GST_VIDEO_INFO_MULTIVIEW_MODE (in_info);
     openhevcdec->picture_multiview_flags =
         GST_VIDEO_INFO_MULTIVIEW_FLAGS (in_info);
 
@@ -1028,7 +1054,9 @@ gst_openhevcviddec_video_frame (GstOpenHEVCVidDec * openhevcdec,
     g_list_free (ol);
   }
 
-  *ret = gst_video_decoder_finish_frame (GST_VIDEO_DECODER (openhevcdec), out_frame);
+  *ret =
+      gst_video_decoder_finish_frame (GST_VIDEO_DECODER (openhevcdec),
+      out_frame);
 
 beach:
   GST_DEBUG_OBJECT (openhevcdec, "return flow %s, got frame: %d",
@@ -1058,8 +1086,8 @@ negotiation_error:
 
  /* Returns: Whether a frame was decoded */
 static gboolean
-gst_openhevcviddec_frame (GstOpenHEVCVidDec * openhevcdec, GstVideoCodecFrame * frame,
-    int got_picture, GstFlowReturn * ret)
+gst_openhevcviddec_frame (GstOpenHEVCVidDec * openhevcdec,
+    GstVideoCodecFrame * frame, int got_picture, GstFlowReturn * ret)
 {
   int got_frame = 0;
 
@@ -1068,7 +1096,8 @@ gst_openhevcviddec_frame (GstOpenHEVCVidDec * openhevcdec, GstVideoCodecFrame * 
 
   *ret = GST_FLOW_OK;
 
-  got_frame = gst_openhevcviddec_video_frame (openhevcdec, frame, got_picture, ret);
+  got_frame =
+      gst_openhevcviddec_video_frame (openhevcdec, frame, got_picture, ret);
 
   return got_frame > 0;
 
@@ -1140,7 +1169,8 @@ gst_openhevcviddec_handle_frame (GstVideoDecoder * decoder,
     /* add padding */
     if (openhevcdec->padded_size < size + AV_INPUT_BUFFER_PADDING_SIZE) {
       openhevcdec->padded_size = size + AV_INPUT_BUFFER_PADDING_SIZE;
-      openhevcdec->padded = g_realloc (openhevcdec->padded, openhevcdec->padded_size);
+      openhevcdec->padded =
+          g_realloc (openhevcdec->padded, openhevcdec->padded_size);
       GST_LOG_OBJECT (openhevcdec, "resized padding buffer to %" G_GSIZE_FORMAT,
           openhevcdec->padded_size);
     }
@@ -1165,7 +1195,8 @@ gst_openhevcviddec_handle_frame (GstVideoDecoder * decoder,
 
   do {
     /* decode a frame of audio/video now */
-    got_picture = gst_openhevcviddec_frame (openhevcdec, frame, got_decode, &ret);
+    got_picture =
+        gst_openhevcviddec_frame (openhevcdec, frame, got_decode, &ret);
 
     if (ret != GST_FLOW_OK) {
       GST_LOG_OBJECT (openhevcdec, "breaking because of flow ret %s",
@@ -1242,7 +1273,8 @@ gst_openhevcviddec_flush (GstVideoDecoder * decoder)
 }
 
 static gboolean
-gst_openhevcviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
+gst_openhevcviddec_decide_allocation (GstVideoDecoder * decoder,
+    GstQuery * query)
 {
   GstVideoCodecState *state;
   GstBufferPool *pool;
@@ -1383,7 +1415,8 @@ gst_openhevcviddec_get_property (GObject * object,
 gboolean
 gst_openhevcviddec_register (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "openhevcdec", GST_RANK_MARGINAL, gst_openhevcviddec_get_type())) {
+  if (!gst_element_register (plugin, "openhevcdec", GST_RANK_MARGINAL,
+          gst_openhevcviddec_get_type ())) {
     g_warning ("Failed to register openhevcdec");
     return FALSE;
   }
