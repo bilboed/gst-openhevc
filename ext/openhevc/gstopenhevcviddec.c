@@ -37,7 +37,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
 #define DEFAULT_MAX_THREADS             0
 #define DEFAULT_TEMPORAL_LAYER_ID       0
-#define DEFAULT_QUALITY_LAYER_ID        0
+#define DEFAULT_QUALITY_LAYER_ID        1
 
 enum
 {
@@ -148,6 +148,9 @@ gst_openhevcviddec_init (GstOpenHEVCVidDec * openhevcdec)
 {
   /* some openhevc data */
   openhevcdec->opened = FALSE;
+  openhevcdec->max_threads = DEFAULT_MAX_THREADS;
+  openhevcdec->temporal_layer_id = DEFAULT_TEMPORAL_LAYER_ID;
+  openhevcdec->quality_layer_id = DEFAULT_QUALITY_LAYER_ID;
 
   gst_video_decoder_set_needs_format (GST_VIDEO_DECODER (openhevcdec), TRUE);
 }
