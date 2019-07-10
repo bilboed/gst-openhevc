@@ -82,9 +82,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h265, "
-        "stream-format=(string)byte-stream"//, "
-//        "alignment=(string)au"
-                     ));
+        "stream-format=(string)byte-stream, layer=(string)enhanced"));
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
